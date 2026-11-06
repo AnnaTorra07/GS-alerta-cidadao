@@ -328,3 +328,187 @@
         <div class="filtros" id="filtros">
           <button class="chip" data-filtro="Todas" aria-pressed="true">Todas</button>
           <button class="chip" data-filtro="Recebido" aria-pressed="false">Recebidas</button>
+          <button class="chip" data-filtro="Em análise" aria-pressed="false">Em análise</button>
+          <button class="chip" data-filtro="Resolvido" aria-pressed="false">Resolvidas</button>
+          <input type="search" id="filtroTexto" placeholder="Buscar por local ou tipo" aria-label="Buscar ocorrências">
+        </div>
+
+        <div class="lista" id="listaOcorrencias"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="sobre">
+    <div class="container">
+      <div class="colunas">
+        <div>
+          <h4>Alerta Cidadão</h4>
+          <p>Plataforma de zeladoria urbana que aproxima o cidadão da prefeitura. Projeto acadêmico desenvolvido para a Global Solution 02/2026, com entrega contínua via Azure DevOps.</p>
+        </div>
+        <div>
+          <h4>Equipe</h4>
+          <ul>
+            <li>Anna Luiza · RM563388</li>
+            <li>Thalita Soares · RM566381</li>
+            <li>João Henrique · RM564212</li>
+          </ul>
+        </div>
+        <div>
+          <h4>Tecnologia</h4>
+          <ul>
+            <li>Node.js e Express</li>
+            <li>Azure Web App</li>
+            <li>Azure Boards, Repos e Pipelines</li>
+          </ul>
+        </div>
+      </div>
+      <div class="legal">FIAP · Cloud Solutions &amp; Scalable Infrastructure · Este site é um projeto de estudo e não representa um órgão público real.</div>
+    </div>
+  </footer>
+
+  <script>
+    const formulario = document.getElementById('formOcorrencia');
+    const lista = document.getElementById('listaOcorrencias');
+    const aviso = document.getElementById('aviso');
+    const etapasNomes = ['Recebido', 'Em análise', 'Resolvido'];
+
+    let dados = [];
+    let filtroStatus = 'Todas';
+
+    function escapar(texto) {
+      const div = document.createElement('div');
+      div.textContent = texto;
+      return div.innerHTML;
+    }
+
+    function protocolo(id) {
+      return 'AC-2026-' + String(id).padStart(4, '0');
+    }
+
+    function classeStatus(status) {
+      return 'status-' + status.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, '-');
+    }
+
+    function mostrarAviso(texto, tipo) {
+      aviso.textContent = texto;
+      aviso.className = 'aviso ' + tipo;
+    }
+
+    function atualizarIndicadores() {
+      const total = dados.length;
+      const resolvidas = dados.filter(o => o.status === 'Resolvido').length;
+      document.getElementById('nTotal').textContent = total;
+      document.getElementById('nAbertas').textContent = total - resolvidas;
+      document.getElementById('nResolvidas').textContent = resolvidas;
+      document.getElementById('nTaxa').textContent =
+        (total ? Math.round(resolvidas / total * 100) : 0) + '%';
+    }
+
+    function desenhar() {
+      const termo = document.getElementById('filtroTexto').value.trim().toLowerCase();
+
+      const visiveis = dados.filter(o => {
+        const okStatus = filtroStatus === 'Todas' || o.status === filtroStatus;
+        const texto = (o.tipo + ' ' + o.local + ' ' + (o.descricao || '') + ' ' + protocolo(o.id)).toLowerCase();
+        return okStatus && (!termo || texto.includes(termo));
+      }).reverse();
+
+      if (!visiveis.length) {
+        lista.innerHTML = '<div class="vazio">Nenhuma ocorrência encontrada. Altere o filtro ou registre uma nova.</div>';
+        return;
+      }
+
+      lista.innerHTML = visiveis.map(o => {
+        const etapa = etapasNomes.indexOf(o.status);
+        const etapas = etapasNomes.map((nome, i) =>
+          `<div class="${i <= etapa ? 'feito' : ''}">${nome}</div>`).join('');
+        return `
+          <article class="ocorrencia">
+            <header>
+              <h3>${escapar(o.tipo)}</h3>
+              <span class="proto">Protocolo ${protocolo(o.id)}</span>
+            </header>
+            <p class="local">📍 ${escapar(o.local)}</p>
+            <p>${escapar(o.descricao || '')}</p>
+            <p><span class="badge ${classeStatus(o.status)}">${escapar(o.status)}</span></p>
+            <div class="etapas ${o.status === 'Resolvido' ? 'resolvido' : ''}">${etapas}</div>
+          </article>`;
+      }).join('');
+    }
+
+    async function carregarOcorrencias() {
+      try {
+        const resposta = await fetch('/api/ocorrencias');
+        dados = await resposta.json();
+        atualizarIndicadores();
+        desenhar();
+      } catch (erro) {
+        lista.innerHTML = '<div class="vazio">Não foi possível carregar as ocorrências. Atualize a página.</div>';
+      }
+    }
+
+    formulario.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      const tipo = document.getElementById('tipo').value;
+      const local = document.getElementById('local').value.trim();
+      const descricao = document.getElementById('descricao').value.trim();
+
+      if (!tipo || !local) {
+        mostrarAviso('Informe o tipo e o endereço para enviar.', 'erro');
+        return;
+      }
+
+      try {
+        const resposta = await fetch('/api/ocorrencias', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, local, descricao })
+        });
+
+        if (!resposta.ok) throw new Error('rejeitado');
+
+        const nova = await resposta.json();
+        formulario.reset();
+        mostrarAviso('Ocorrência registrada. Guarde seu protocolo: ' + protocolo(nova.id), 'ok');
+        await carregarOcorrencias();
+      } catch (erro) {
+        mostrarAviso('Não foi possível enviar agora. Tente novamente.', 'erro');
+      }
+    });
+
+    document.querySelectorAll('.servico').forEach(botao => {
+      botao.addEventListener('click', () => {
+        document.getElementById('tipo').value = botao.dataset.tipo;
+        document.getElementById('registrar').scrollIntoView();
+        document.getElementById('local').focus({ preventScroll: true });
+      });
+    });
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        filtroStatus = chip.dataset.filtro;
+        document.querySelectorAll('.chip').forEach(c =>
+          c.setAttribute('aria-pressed', String(c === chip)));
+        desenhar();
+      });
+    });
+
+    document.getElementById('filtroTexto').addEventListener('input', desenhar);
+
+    document.getElementById('btnBuscar').addEventListener('click', () => {
+      const termo = document.getElementById('buscaProtocolo').value.trim();
+      document.getElementById('filtroTexto').value = termo;
+      filtroStatus = 'Todas';
+      document.querySelectorAll('.chip').forEach(c =>
+        c.setAttribute('aria-pressed', String(c.dataset.filtro === 'Todas')));
+      desenhar();
+      document.getElementById('acompanhar').scrollIntoView();
+    });
+
+    carregarOcorrencias();
+  </script>
+</body>
+</html>
