@@ -1,4 +1,3 @@
-
 const express = require('express');
 const path = require('path');
 
@@ -13,12 +12,14 @@ const ocorrencias = [
     id: 1,
     tipo: 'Iluminação pública',
     local: 'Avenida Paulista, 1000',
+    descricao: 'Poste apagado há 3 dias',
     status: 'Em análise'
   },
   {
     id: 2,
     tipo: 'Buraco na via',
     local: 'Rua Augusta, 500',
+    descricao: 'Buraco grande na faixa da direita',
     status: 'Resolvido'
   }
 ];
@@ -28,7 +29,7 @@ app.get('/api/ocorrencias', (req, res) => {
 });
 
 app.post('/api/ocorrencias', (req, res) => {
-  const { tipo, local } = req.body;
+  const { tipo, local, descricao } = req.body;
 
   if (!tipo || !local) {
     return res.status(400).json({
@@ -38,8 +39,9 @@ app.post('/api/ocorrencias', (req, res) => {
 
   const nova = {
     id: ocorrencias.length + 1,
-    tipo,
-    local,
+    tipo: String(tipo).trim(),
+    local: String(local).trim(),
+    descricao: descricao ? String(descricao).trim() : 'Sem descrição',
     status: 'Recebido'
   };
 
