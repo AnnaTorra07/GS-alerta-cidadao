@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alerta Cidadão</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    header {
+      background: #123b5d;
+      color: white;
+      padding: 28px 20px;
+      text-align: center;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 30px auto;
+      padding: 25px;
+      background: white;
+      border-radius: 12px;
+    }
+
+    h2 {
+      color: #123b5d;
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    input, select, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: 1px solid #cbd5e1;
+    }
+
+    button {
+      margin-top: 20px;
+      background: #16845b;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #116b49;
+    }
+
+    .ocorrencia {
+      padding: 15px;
+      margin-top: 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+      border-left: 4px solid #16845b;
+    }
+
+    .status {
+      color: #16845b;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>Alerta Cidadão</h1>
+    <p>Juntos por uma cidade melhor!</p>
+  </header>
+
+  <main>
+    <h2>Registrar ocorrência</h2>
+
+    <form id="formOcorrencia">
+      <label for="tipo">Tipo de ocorrência</label>
+      <select id="tipo" required>
+        <option value="">Selecione</option>
+        <option>Buraco na via</option>
+        <option>Iluminação pública</option>
+        <option>Lixo e entulho</option>
+        <option>Alagamento</option>
+        <option>Vazamento</option>
+      </select>
+
+      <label for="local">Local da ocorrência</label>
+      <input
+        type="text"
+        id="local"
+        placeholder="Digite a rua, bairro ou endereço"
+        required
+      >
+
+      <button type="submit">Enviar ocorrência</button>
+    </form>
+
+    <h2>Ocorrências registradas</h2>
+    <div id="listaOcorrencias"></div>
+  </main>
+
+  <script>
+    const formulario = document.getElementById('formOcorrencia');
+    const lista = document.getElementById('listaOcorrencias');
+
+    async function carregarOcorrencias() {
+      const resposta = await fetch('/api/ocorrencias');
+      const ocorrencias = await resposta.json();
+
+      lista.innerHTML = '';
+
+      ocorrencias.forEach(ocorrencia => {
+        lista.innerHTML += `
+          <div class="ocorrencia">
+            <strong>${ocorrencia.tipo}</strong>
+            <p>Local: ${ocorrencia.local}</p>
+            <p class="status">Status: ${ocorrencia.status}</p>
+          </div>
+        `;
+      });
+    }
+
+    formulario.addEventListener('submit', async (evento) => {
+      evento.preventDefault();
+
+      const tipo = document.getElementById('tipo').value;
+      const local = document.getElementById('local').value;
+
+      const resposta = await fetch('/api/ocorrencias', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ tipo, local })
+      });
+
+      if (resposta.ok) {
+        formulario.reset();
+        carregarOcorrencias();
+        alert('Ocorrência registrada com sucesso!');
+      } else {
+        alert('Não foi possível registrar a ocorrência.');
+      }
+    });
+
+    carregarOcorrencias();
+  </script>
+
+</body>
+</html>
+
