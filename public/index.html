@@ -1,167 +1,330 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Alerta Cidadão</title>
+  <title>Alerta Cidadão | Prefeitura Digital</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏛️</text></svg>">
 
   <style>
-    * {
-      box-sizing: border-box;
-      font-family: Arial, sans-serif;
+    :root {
+      --azul: #1351b4;
+      --azul-escuro: #0c326f;
+      --azul-claro: #e8f0fb;
+      --amarelo: #ffcd07;
+      --verde: #168821;
+      --ambar: #b45f06;
+      --texto: #1b2433;
+      --suave: #586274;
+      --linha: #d5dbe5;
+      --fundo: #f4f6fa;
     }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
     body {
       margin: 0;
-      background: #f1f5f9;
-      color: #1e293b;
+      font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      line-height: 1.55;
     }
 
-    header {
-      background: #123b5d;
-      color: white;
-      padding: 28px 20px;
-      text-align: center;
-    }
+    a { color: inherit; text-decoration: none; }
+    :focus-visible { outline: 3px solid var(--amarelo); outline-offset: 2px; }
 
-    main {
-      max-width: 700px;
-      margin: 30px auto;
-      padding: 25px;
-      background: white;
-      border-radius: 12px;
-    }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
 
-    h2 {
-      color: #123b5d;
+    .pular {
+      position: absolute; left: -999px; top: 0;
+      background: var(--amarelo); color: #000; padding: 8px 14px; z-index: 20;
     }
+    .pular:focus { left: 8px; }
 
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: bold;
+    /* Faixa institucional */
+    .faixa {
+      background: var(--azul-escuro);
+      color: #cfe0fa;
+      font-size: 0.82rem;
+      padding: 6px 0;
     }
+    .faixa .container { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 8px;
-      border-radius: 6px;
-      border: 1px solid #cbd5e1;
+    /* Cabeçalho */
+    .topo { background: #fff; border-bottom: 1px solid var(--linha); position: sticky; top: 0; z-index: 10; }
+    .topo .container { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+    .marca { display: flex; align-items: center; gap: 12px; }
+    .marca svg { width: 46px; height: 46px; flex: none; }
+    .marca strong { display: block; font-size: 1.15rem; color: var(--azul-escuro); line-height: 1.1; }
+    .marca span { font-size: 0.85rem; color: var(--suave); }
+    nav { display: flex; gap: 4px; flex-wrap: wrap; }
+    nav a { padding: 8px 14px; border-radius: 6px; font-weight: 600; color: var(--azul); }
+    nav a:hover { background: var(--azul-claro); }
+
+    /* Destaque inicial */
+    .hero { background: var(--azul); color: #fff; padding: 56px 0 96px; }
+    .hero .container { display: grid; grid-template-columns: 1.3fr 1fr; gap: 40px; align-items: center; }
+    .hero h1 { font-size: clamp(1.9rem, 4.5vw, 2.9rem); line-height: 1.15; margin: 0 0 16px; }
+    .hero p { margin: 0 0 24px; font-size: 1.1rem; color: #dbe7fb; max-width: 520px; }
+    .botoes { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-block; padding: 13px 24px; border-radius: 999px;
+      font: inherit; font-weight: 700; cursor: pointer; border: 2px solid transparent;
     }
+    .btn-amarelo { background: var(--amarelo); color: #1b1b1b; }
+    .btn-amarelo:hover { background: #f0bd00; }
+    .btn-borda { border-color: #fff; color: #fff; background: transparent; }
+    .btn-borda:hover { background: rgba(255,255,255,.14); }
 
-    button {
-      margin-top: 20px;
-      background: #16845b;
-      color: white;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
+    .protocolo {
+      background: #fff; color: var(--texto); border-radius: 12px; padding: 24px;
+      box-shadow: 0 10px 30px rgba(8, 30, 70, .35);
     }
+    .protocolo h2 { margin: 0 0 6px; font-size: 1.2rem; color: var(--azul-escuro); }
+    .protocolo p { margin: 0 0 14px; color: var(--suave); font-size: .95rem; }
+    .linha-busca { display: flex; gap: 8px; }
+    .linha-busca input { flex: 1; min-width: 0; }
 
-    button:hover {
-      background: #116b49;
+    /* Indicadores */
+    .indicadores { margin-top: -56px; position: relative; }
+    .indicadores .container { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .indicador {
+      background: #fff; border-radius: 10px; padding: 18px 20px;
+      border: 1px solid var(--linha); border-bottom: 4px solid var(--azul);
     }
+    .indicador b { display: block; font-size: 2rem; color: var(--azul-escuro); line-height: 1.1; }
+    .indicador span { color: var(--suave); font-size: .92rem; }
+    .indicador.verde { border-bottom-color: var(--verde); }
+    .indicador.ambar { border-bottom-color: var(--ambar); }
+    .indicador.amarelo { border-bottom-color: var(--amarelo); }
 
-    .ocorrencia {
-      padding: 15px;
-      margin-top: 12px;
-      background: #f1f5f9;
-      border-radius: 8px;
-      border-left: 4px solid #16845b;
+    section.bloco { padding: 56px 0 8px; }
+    .bloco h2 { font-size: 1.6rem; margin: 0 0 6px; color: var(--azul-escuro); }
+    .bloco .sub { margin: 0 0 24px; color: var(--suave); }
+
+    /* Serviços */
+    .servicos { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .servico {
+      background: #fff; border: 1px solid var(--linha); border-radius: 10px;
+      padding: 20px; text-align: left; font: inherit; cursor: pointer; color: var(--texto);
+      display: flex; flex-direction: column; gap: 8px;
     }
+    .servico:hover { border-color: var(--azul); box-shadow: 0 4px 14px rgba(19, 81, 180, .15); }
+    .servico .icone {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--azul-claro);
+      display: grid; place-items: center; font-size: 1.5rem;
+    }
+    .servico b { color: var(--azul-escuro); }
+    .servico small { color: var(--suave); }
 
-    .status {
-      color: #16845b;
-      font-weight: bold;
+    /* Registro */
+    .registro { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; align-items: start; }
+    .cartao { background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 26px; }
+    .cartao h3 { margin: 0 0 4px; font-size: 1.2rem; color: var(--azul-escuro); }
+
+    label { display: block; margin-top: 16px; font-weight: 600; }
+    input, select, textarea {
+      width: 100%; margin-top: 6px; padding: 12px 14px; font: inherit;
+      border: 1px solid #8d98ab; border-radius: 8px; background: #fff; color: var(--texto);
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .dica { font-size: .85rem; color: var(--suave); margin-top: 4px; }
+
+    form button[type="submit"] { width: 100%; margin-top: 22px; background: var(--azul); color: #fff; }
+    form button[type="submit"]:hover { background: var(--azul-escuro); }
+
+    .aviso { margin-top: 16px; padding: 12px 14px; border-radius: 8px; font-weight: 600; display: none; }
+    .aviso.ok { display: block; background: #e3f4e5; color: #0f5c17; border: 1px solid #9fd3a5; }
+    .aviso.erro { display: block; background: #fde8e6; color: #9d1c12; border: 1px solid #f0b2ad; }
+
+    .passos { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 16px; }
+    .passos li { display: flex; gap: 12px; }
+    .passos .n {
+      flex: none; width: 30px; height: 30px; border-radius: 50%;
+      background: var(--azul); color: #fff; font-weight: 700; display: grid; place-items: center;
+    }
+    .passos b { display: block; }
+    .passos span { color: var(--suave); font-size: .92rem; }
+
+    /* Acompanhamento */
+    .filtros { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; align-items: center; }
+    .filtros input { max-width: 260px; margin: 0 0 0 auto; }
+    .chip {
+      padding: 8px 16px; border-radius: 999px; border: 1px solid var(--azul);
+      background: #fff; color: var(--azul); font: inherit; font-weight: 600; cursor: pointer;
+    }
+    .chip[aria-pressed="true"] { background: var(--azul); color: #fff; }
+
+    .lista { display: grid; gap: 14px; }
+    .ocorrencia { background: #fff; border: 1px solid var(--linha); border-radius: 12px; padding: 20px 22px; }
+    .ocorrencia header { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+    .ocorrencia h3 { margin: 0; font-size: 1.1rem; color: var(--azul-escuro); }
+    .proto { font-size: .85rem; color: var(--suave); font-variant-numeric: tabular-nums; }
+    .ocorrencia p { margin: 6px 0 0; }
+    .local { color: var(--suave); }
+
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; color: #fff; }
+    .status-recebido { background: var(--azul); }
+    .status-em-analise { background: var(--ambar); }
+    .status-resolvido { background: var(--verde); }
+
+    .etapas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 16px; }
+    .etapas div { font-size: .78rem; color: var(--suave); }
+    .etapas div::before { content: ""; display: block; height: 6px; border-radius: 3px; background: #dde2ea; margin-bottom: 4px; }
+    .etapas div.feito { color: var(--texto); font-weight: 600; }
+    .etapas div.feito::before { background: var(--azul); }
+    .etapas.resolvido div.feito::before { background: var(--verde); }
+
+    .vazio { background: #fff; border: 1px dashed #8d98ab; border-radius: 12px; padding: 28px; text-align: center; color: var(--suave); }
+
+    /* Rodapé */
+    footer { background: var(--azul-escuro); color: #cfe0fa; margin-top: 64px; padding: 40px 0 24px; }
+    footer .colunas { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 28px; }
+    footer h4 { margin: 0 0 10px; color: #fff; }
+    footer p, footer li { margin: 0 0 6px; font-size: .92rem; }
+    footer ul { list-style: none; margin: 0; padding: 0; }
+    .legal { border-top: 1px solid rgba(255,255,255,.2); margin-top: 28px; padding-top: 16px; font-size: .82rem; }
+
+    @media (max-width: 860px) {
+      .hero .container, .registro, footer .colunas { grid-template-columns: 1fr; }
+      .indicadores .container { grid-template-columns: repeat(2, 1fr); }
+      .filtros input { max-width: none; margin-left: 0; width: 100%; }
     }
   </style>
 </head>
 
 <body>
+  <a class="pular" href="#registrar">Ir para o conteúdo</a>
 
-  <header>
-    <h1>Alerta Cidadão</h1>
-    <p>Juntos por uma cidade melhor!</p>
-  </header>
+  <div class="faixa">
+    <div class="container">
+      <span>Projeto acadêmico · Global Solution 02/2026 · FIAP</span>
+      <span>Atendimento digital 24 horas</span>
+    </div>
+  </div>
 
-  <main>
-    <h2>Registrar ocorrência</h2>
+  <div class="topo">
+    <div class="container">
+      <a class="marca" href="#inicio" aria-label="Alerta Cidadão, página inicial">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <rect width="64" height="64" rx="12" fill="#1351b4"/>
+          <path d="M10 28 32 12l22 16v4H10z" fill="#ffcd07"/>
+          <rect x="15" y="34" width="6" height="14" fill="#fff"/>
+          <rect x="26" y="34" width="6" height="14" fill="#fff"/>
+          <rect x="37" y="34" width="6" height="14" fill="#fff"/>
+          <rect x="48" y="34" width="4" height="14" fill="#fff"/>
+          <rect x="10" y="50" width="44" height="5" fill="#fff"/>
+        </svg>
+        <div>
+          <strong>Alerta Cidadão</strong>
+          <span>Prefeitura Digital · Zeladoria urbana</span>
+        </div>
+      </a>
+      <nav aria-label="Principal">
+        <a href="#servicos">Serviços</a>
+        <a href="#registrar">Registrar</a>
+        <a href="#acompanhar">Acompanhar</a>
+        <a href="#sobre">Sobre</a>
+      </nav>
+    </div>
+  </div>
 
-    <form id="formOcorrencia">
-      <label for="tipo">Tipo de ocorrência</label>
-      <select id="tipo" required>
-        <option value="">Selecione</option>
-        <option>Buraco na via</option>
-        <option>Iluminação pública</option>
-        <option>Lixo e entulho</option>
-        <option>Alagamento</option>
-        <option>Vazamento</option>
-      </select>
-
-      <label for="local">Local da ocorrência</label>
-      <input
-        type="text"
-        id="local"
-        placeholder="Digite a rua, bairro ou endereço"
-        required
-      >
-
-      <button type="submit">Enviar ocorrência</button>
-    </form>
-
-    <h2>Ocorrências registradas</h2>
-    <div id="listaOcorrencias"></div>
-  </main>
-
-  <script>
-    const formulario = document.getElementById('formOcorrencia');
-    const lista = document.getElementById('listaOcorrencias');
-
-    async function carregarOcorrencias() {
-      const resposta = await fetch('/api/ocorrencias');
-      const ocorrencias = await resposta.json();
-
-      lista.innerHTML = '';
-
-      ocorrencias.forEach(ocorrencia => {
-        lista.innerHTML += `
-          <div class="ocorrencia">
-            <strong>${ocorrencia.tipo}</strong>
-            <p>Local: ${ocorrencia.local}</p>
-            <p class="status">Status: ${ocorrencia.status}</p>
+  <main id="inicio">
+    <section class="hero">
+      <div class="container">
+        <div>
+          <h1>Viu um problema na sua rua? Avise a prefeitura em poucos minutos.</h1>
+          <p>Registre buracos, falta de iluminação, alagamentos e lixo acumulado. Você recebe um protocolo e acompanha cada etapa até a solução.</p>
+          <div class="botoes">
+            <a class="btn btn-amarelo" href="#registrar">Registrar ocorrência</a>
+            <a class="btn btn-borda" href="#acompanhar">Acompanhar pedidos</a>
           </div>
-        `;
-      });
-    }
+        </div>
 
-    formulario.addEventListener('submit', async (evento) => {
-      evento.preventDefault();
+        <div class="protocolo">
+          <h2>Consultar protocolo</h2>
+          <p>Digite o número que você recebeu ao registrar.</p>
+          <div class="linha-busca">
+            <input type="text" id="buscaProtocolo" placeholder="Ex.: AC-2026-0003" aria-label="Número do protocolo">
+            <button class="btn btn-amarelo" type="button" id="btnBuscar">Buscar</button>
+          </div>
+        </div>
+      </div>
+    </section>
 
-      const tipo = document.getElementById('tipo').value;
-      const local = document.getElementById('local').value;
+    <section class="indicadores" aria-label="Indicadores">
+      <div class="container">
+        <div class="indicador"><b id="nTotal">0</b><span>Ocorrências registradas</span></div>
+        <div class="indicador amarelo"><b id="nAbertas">0</b><span>Em andamento</span></div>
+        <div class="indicador verde"><b id="nResolvidas">0</b><span>Resolvidas</span></div>
+        <div class="indicador ambar"><b id="nTaxa">0%</b><span>Taxa de resolução</span></div>
+      </div>
+    </section>
 
-      const resposta = await fetch('/api/ocorrencias', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tipo, local })
-      });
+    <section class="bloco" id="servicos">
+      <div class="container">
+        <h2>O que você quer comunicar?</h2>
+        <p class="sub">Escolha o tipo de problema para começar o registro.</p>
+        <div class="servicos">
+          <button class="servico" data-tipo="Buraco na via"><span class="icone">🕳️</span><b>Buraco na via</b><small>Asfalto danificado ou cratera</small></button>
+          <button class="servico" data-tipo="Iluminação pública"><span class="icone">💡</span><b>Iluminação pública</b><small>Poste apagado ou piscando</small></button>
+          <button class="servico" data-tipo="Alagamento"><span class="icone">🌧️</span><b>Alagamento</b><small>Água acumulada e bueiro entupido</small></button>
+          <button class="servico" data-tipo="Lixo e entulho"><span class="icone">🗑️</span><b>Lixo e entulho</b><small>Descarte irregular na calçada</small></button>
+          <button class="servico" data-tipo="Vazamento"><span class="icone">🚰</span><b>Vazamento</b><small>Água ou esgoto na via pública</small></button>
+          <button class="servico" data-tipo="Calçada danificada"><span class="icone">🚶</span><b>Calçada danificada</b><small>Piso quebrado ou sem acessibilidade</small></button>
+        </div>
+      </div>
+    </section>
 
-      if (resposta.ok) {
-        formulario.reset();
-        carregarOcorrencias();
-        alert('Ocorrência registrada com sucesso!');
-      } else {
-        alert('Não foi possível registrar a ocorrência.');
-      }
-    });
+    <section class="bloco" id="registrar">
+      <div class="container registro">
+        <div class="cartao">
+          <h3>Registrar ocorrência</h3>
+          <p class="dica">Os campos com * são obrigatórios.</p>
 
-    carregarOcorrencias();
-  </script>
+          <form id="formOcorrencia" novalidate>
+            <label for="tipo">Tipo de ocorrência *</label>
+            <select id="tipo" required>
+              <option value="">Selecione</option>
+              <option>Buraco na via</option>
+              <option>Iluminação pública</option>
+              <option>Alagamento</option>
+              <option>Lixo e entulho</option>
+              <option>Vazamento</option>
+              <option>Calçada danificada</option>
+            </select>
 
-</body>
-</html>
+            <label for="local">Endereço ou ponto de referência *</label>
+            <input type="text" id="local" placeholder="Rua, número e bairro" required>
 
+            <label for="descricao">Descrição</label>
+            <textarea id="descricao" placeholder="Explique o que está acontecendo e há quanto tempo"></textarea>
+            <p class="dica">Quanto mais detalhes, mais rápido o atendimento.</p>
+
+            <button class="btn" type="submit">Enviar ocorrência</button>
+            <p id="aviso" class="aviso" role="status"></p>
+          </form>
+        </div>
+
+        <div class="cartao">
+          <h3>Como funciona</h3>
+          <ol class="passos">
+            <li><span class="n">1</span><div><b>Você registra</b><span>Informe o tipo e o local do problema.</span></div></li>
+            <li><span class="n">2</span><div><b>Recebe um protocolo</b><span>Use o número para consultar o andamento.</span></div></li>
+            <li><span class="n">3</span><div><b>A equipe analisa</b><span>O pedido segue para o setor responsável.</span></div></li>
+            <li><span class="n">4</span><div><b>Problema resolvido</b><span>O status muda para resolvido.</span></div></li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="bloco" id="acompanhar">
+      <div class="container">
+        <h2>Acompanhe as ocorrências</h2>
+        <p class="sub">Veja o que já foi registrado na cidade e em que etapa cada pedido está.</p>
+
+        <div class="filtros" id="filtros">
+          <button class="chip" data-filtro="Todas" aria-pressed="true">Todas</button>
+          <button class="chip" data-filtro="Recebido" aria-pressed="false">Recebidas</button>
