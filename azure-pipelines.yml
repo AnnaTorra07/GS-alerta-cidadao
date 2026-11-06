@@ -1,0 +1,60 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  azureSubscription: 'conn-azure-gs'
+  webAppName: 'alertacidadao-rm563388'
+
+stages:
+- stage: Build
+  displayName: Build (CI)
+  jobs:
+  - job: Build
+    steps:
+    - task: NodeTool@0
+      displayName: 'Instalar Node 22'
+      inputs:
+        versionSpec: '22.x'
+
+    - script: npm install --omit=dev
+      displayName: 'Instalar dependências'
+
+    - task: ArchiveFiles@2
+      displayName: 'Compactar aplicação'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
+        includeRootFolder: false
+        archiveType: 'zip'
+        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+        replaceExistingArchive: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+      artifact: drop
+      displayName: 'Publicar artefato'
+
+- stage: Deploy
+  displayName: Deploy (CD)
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeployWeb
+    displayName: 'Deploy no Azure Web App'
+    environment: 'producao'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebApp@1
+            displayName: 'Publicar no Web App'
+            inputs:
+              azureSubscription: '$(azureSubscription)'
+              appType: 'webAppLinux'
+              appName: '$(webAppName)'
+              package: '$(Pipeline.Workspace)/drop/app.zip'
+              runtimeStack: 'NODE|22-lts'
+              startUpCommand: 'npm start'
